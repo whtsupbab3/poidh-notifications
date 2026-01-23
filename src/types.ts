@@ -1,93 +1,118 @@
-export type Address = `0x${string}`;
+import { z } from 'zod';
 
-export type BountyBaseData = {
-  id: number;
-  chainId: number;
-  onChainId: number;
-  title: string;
-  description: string;
-  amount: number;
-  issuer: Address;
-  createdAt: number;
-  inProgress: boolean;
-  isJoinedBounty: boolean;
-  isCanceled: boolean;
-  isMultiplayer: boolean;
-  isVoting: boolean;
-  deadline?: number | null;
-  currency: string;
-};
+export const FarcasterUserSchema = z.object({
+  fid: z.number(),
+  username: z.string(),
+});
 
-export type BountyWithParticipantsData = BountyBaseData & {
-  participants: Address[];
-};
+export type FarcasterUser = z.infer<typeof FarcasterUserSchema>;
 
-export type ClaimEventData = {
-  id: number;
-  chainId: number;
-  onChainId: number;
-  bountyId: number;
-  title: string;
-  description: string;
-  url: string;
-  issuer: Address;
-  owner: Address;
-  isVoting: boolean;
-  isAccepted: boolean;
-};
+const Address = z.custom<`0x${string}`>(
+  (val: string) => /^0x[0-9a-fA-F]*$/.test(val),
+  {
+    message: 'Invalid Ethereum address',
+  }
+);
 
-export type BountyCreatedEventData = BountyBaseData;
+const BountyBaseData = z.object({
+  id: z.number(),
+  chainId: z.number(),
+  onChainId: z.number(),
+  title: z.string(),
+  description: z.string(),
+  amount: z.number(),
+  issuer: Address,
+  createdAt: z.number(),
+  inProgress: z.boolean(),
+  isJoinedBounty: z.boolean(),
+  isCanceled: z.boolean(),
+  isMultiplayer: z.boolean(),
+  isVoting: z.boolean(),
+  deadline: z.number().nullable().optional(),
+  currency: z.string(),
+});
 
-export type BountyJoinedEventData = {
-  participant: {
-    address: Address;
-    amount: number;
-  };
-  bounty: BountyWithParticipantsData;
-};
+const BountyWithParticipantsData = BountyBaseData.extend({
+  participants: z.array(Address),
+});
 
-export type ClaimCreatedEventData = {
-  bounty: BountyWithParticipantsData;
-  claim: ClaimEventData;
-};
+const ClaimEventData = z.object({
+  id: z.number(),
+  chainId: z.number(),
+  onChainId: z.number(),
+  bountyId: z.number(),
+  title: z.string(),
+  description: z.string(),
+  url: z.string(),
+  issuer: Address,
+  owner: Address,
+  isVoting: z.boolean(),
+  isAccepted: z.boolean(),
+});
 
-export type ClaimAcceptedEventData = {
-  bounty: BountyWithParticipantsData;
-  claim: ClaimEventData;
-};
+const BountyCreatedEventData = BountyBaseData;
 
-export type VotingStartedEventData = {
-  bounty: BountyWithParticipantsData;
-  claim: ClaimEventData;
-  otherClaimers: Address[];
-};
+const BountyJoinedEventData = z.object({
+  participant: z.object({
+    address: Address,
+    amount: z.number(),
+  }),
+  bounty: BountyWithParticipantsData,
+});
 
-export type NotificationEventPayload =
-  | {
-      event: "BountyCreated";
-      data: BountyCreatedEventData;
-    }
-  | {
-      event: "BountyJoined";
-      data: BountyJoinedEventData;
-    }
-  | {
-      event: "ClaimCreated";
-      data: ClaimCreatedEventData;
-    }
-  | {
-      event: "ClaimAccepted";
-      data: ClaimAcceptedEventData;
-    }
-  | {
-      event: "VotingStarted";
-      data: VotingStartedEventData;
-    };
+const ClaimCreatedEventData = z.object({
+  bounty: BountyWithParticipantsData,
+  claim: ClaimEventData,
+});
 
-export type NotificationRow = {
-  id: number;
-  created_at: string;
-  event: string;
-  data: Record<string, unknown>;
-  send_at: string | null;
-};
+const ClaimAcceptedEventData = z.object({
+  bounty: BountyWithParticipantsData,
+  claim: ClaimEventData,
+});
+
+const VotingStartedEventData = z.object({
+  bounty: BountyWithParticipantsData,
+  claim: ClaimEventData,
+  otherClaimers: z.array(Address),
+});
+
+export const NotificationEventPayloadSchema = z.discriminatedUnion('event', [
+  z.object({
+    event: z.literal('BountyCreated'),
+    data: BountyCreatedEventData,
+  }),
+  z.object({
+    event: z.literal('BountyJoined'),
+    data: BountyJoinedEventData,
+  }),
+  z.object({
+    event: z.literal('ClaimCreated'),
+    data: ClaimCreatedEventData,
+  }),
+  z.object({
+    event: z.literal('ClaimAccepted'),
+    data: ClaimAcceptedEventData,
+  }),
+  z.object({
+    event: z.literal('VotingStarted'),
+    data: VotingStartedEventData,
+  }),
+]);
+
+export type NotificationEventPayload = z.infer<typeof NotificationEventPayloadSchema>;
+
+export const NotificationRowSchema = z.object({
+  id: z.number(),
+  created_at: z.date(),
+  event: z.enum([
+    'BountyCreated',
+    'BountyJoined',
+    'ClaimCreated',
+    'ClaimAccepted',
+    'VotingStarted',
+  ]),
+  data: NotificationEventPayloadSchema,
+  send_at: z.date().nullable(),
+});
+
+export type NotificationRow = z.infer<typeof NotificationRowSchema>;

@@ -1,37 +1,29 @@
 import 'dotenv/config';
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
-import { db } from './db';
-import { notifications } from './db-schema';
-import { isNull } from 'drizzle-orm';
-import { NotificationRowSchema } from './schemas';
+import { getNewActivity } from './utils/utils';
 
 const app = new Hono();
 
-async function queryNotifications() {
-  try {
-    const result = await db
-      .select()
-      .from(notifications)
-      .where(isNull(notifications.send_at))
-      .orderBy(notifications.created_at);
 
-    const parsedNotifications = result.map((row) => NotificationRowSchema.parse(row));
-    console.log(`[${new Date().toISOString()}] Found ${parsedNotifications.length} unsent notifications`);
-    return parsedNotifications;
-  } catch (error) {
-    console.error('Error querying notifications:', error);
-    return [];
+setInterval(async () => {
+  const newActivities = await getNewActivity();
+  console.log(`${newActivities.length} notifications found`);
+
+  for (const act of newActivities) {
+    if (act.event === 'BountyCreated') {
+      // Handle BountyCreated event
+    } else if (act.event === 'BountyJoined') {
+      // Handle BountyJoined event
+    } else if (act.event === 'ClaimCreated') {
+      // Handle ClaimCreated event
+    } else if (act.event === 'ClaimAccepted') {
+      // Handle ClaimAccepted event
+    } else if (act.event === 'VotingStarted') {
+      // Handle VotingStarted event
+    }
   }
-}
-
-setInterval(() => {
-  queryNotifications();
 }, 10000);
-
-queryNotifications().then((notifications) => {
-  console.log(`Initial query: ${notifications.length} notifications found`);
-});
 
 app.get('/health', (c) => c.json({ status: 'ok' }));
 
@@ -46,5 +38,3 @@ serve({
   fetch: app.fetch,
   port,
 });
-
-console.log(`Hono server running on http://localhost:${port}`);
