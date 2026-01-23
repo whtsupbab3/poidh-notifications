@@ -7,21 +7,34 @@ export const FarcasterUserSchema = z.object({
 
 export type FarcasterUser = z.infer<typeof FarcasterUserSchema>;
 
-const Address = z.custom<`0x${string}`>(
+export type Currency = 'eth' | 'degen';
+
+export type Netname = 'degen' | 'base' | 'arbitrum';
+
+export type ChainId = 666666666 | 42161 | 8453;
+
+export type Chain = {
+  id: number;
+  name: string;
+  currency: Currency;
+  slug: Netname;
+};
+
+const AddressSchema = z.custom<`0x${string}`>(
   (val: string) => /^0x[0-9a-fA-F]*$/.test(val),
   {
     message: 'Invalid Ethereum address',
   }
 );
 
-const BountyBaseData = z.object({
+const BountyBaseDataSchema = z.object({
   id: z.number(),
-  chainId: z.number(),
+  chainId: z.union([z.literal(666666666), z.literal(42161), z.literal(8453)]),
   onChainId: z.number(),
   title: z.string(),
   description: z.string(),
   amount: z.number(),
-  issuer: Address,
+  issuer: AddressSchema,
   createdAt: z.number(),
   inProgress: z.boolean(),
   isJoinedBounty: z.boolean(),
@@ -32,70 +45,70 @@ const BountyBaseData = z.object({
   currency: z.string(),
 });
 
-const BountyWithParticipantsData = BountyBaseData.extend({
-  participants: z.array(Address),
+const BountyWithParticipantsDataSchema = BountyBaseDataSchema.extend({
+  participants: z.array(AddressSchema),
 });
 
-const ClaimEventData = z.object({
+const ClaimEventDataSchema = z.object({
   id: z.number(),
-  chainId: z.number(),
+  chainId: z.union([z.literal(666666666), z.literal(42161), z.literal(8453)]),
   onChainId: z.number(),
   bountyId: z.number(),
   title: z.string(),
   description: z.string(),
   url: z.string(),
-  issuer: Address,
-  owner: Address,
+  issuer: AddressSchema,
+  owner: AddressSchema,
   isVoting: z.boolean(),
   isAccepted: z.boolean(),
 });
 
-const BountyCreatedEventData = BountyBaseData;
+const BountyCreatedEventDataSchema = BountyBaseDataSchema;
 
-const BountyJoinedEventData = z.object({
+const BountyJoinedEventDataSchema = z.object({
   participant: z.object({
-    address: Address,
+    address: AddressSchema,
     amount: z.number(),
   }),
-  bounty: BountyWithParticipantsData,
+  bounty: BountyWithParticipantsDataSchema,
 });
 
-const ClaimCreatedEventData = z.object({
-  bounty: BountyWithParticipantsData,
-  claim: ClaimEventData,
+const ClaimCreatedEventDataSchema = z.object({
+  bounty: BountyWithParticipantsDataSchema,
+  claim: ClaimEventDataSchema,
 });
 
-const ClaimAcceptedEventData = z.object({
-  bounty: BountyWithParticipantsData,
-  claim: ClaimEventData,
+const ClaimAcceptedEventDataSchema = z.object({
+  bounty: BountyWithParticipantsDataSchema,
+  claim: ClaimEventDataSchema,
 });
 
-const VotingStartedEventData = z.object({
-  bounty: BountyWithParticipantsData,
-  claim: ClaimEventData,
-  otherClaimers: z.array(Address),
+const VotingStartedEventDataSchema = z.object({
+  bounty: BountyWithParticipantsDataSchema,
+  claim: ClaimEventDataSchema,
+  otherClaimers: z.array(AddressSchema),
 });
 
 export const NotificationEventPayloadSchema = z.discriminatedUnion('event', [
   z.object({
     event: z.literal('BountyCreated'),
-    data: BountyCreatedEventData,
+    data: BountyCreatedEventDataSchema,
   }),
   z.object({
     event: z.literal('BountyJoined'),
-    data: BountyJoinedEventData,
+    data: BountyJoinedEventDataSchema,
   }),
   z.object({
     event: z.literal('ClaimCreated'),
-    data: ClaimCreatedEventData,
+    data: ClaimCreatedEventDataSchema,
   }),
   z.object({
     event: z.literal('ClaimAccepted'),
-    data: ClaimAcceptedEventData,
+    data: ClaimAcceptedEventDataSchema,
   }),
   z.object({
     event: z.literal('VotingStarted'),
-    data: VotingStartedEventData,
+    data: VotingStartedEventDataSchema,
   }),
 ]);
 

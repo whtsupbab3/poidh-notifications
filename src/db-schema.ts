@@ -1,5 +1,5 @@
 import { pgTable, serial, text, timestamp, jsonb } from 'drizzle-orm/pg-core';
-import { NotificationEventPayload } from './types';
+import { NotificationEventPayload } from './utils/types';
 
 export const notifications = pgTable('Notifications', {
   id: serial('id').primaryKey(),

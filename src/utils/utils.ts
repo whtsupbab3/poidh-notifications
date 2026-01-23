@@ -1,7 +1,7 @@
 import { db } from '../db';
 import { notifications } from '../db-schema';
 import { isNull } from 'drizzle-orm';
-import { NotificationRowSchema, FarcasterUser } from '../types';
+import { NotificationRowSchema, FarcasterUser, NotificationEventPayload } from './types';
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY;
 
@@ -54,7 +54,7 @@ export async function getFarcasterFids(addresses: string[]): Promise<number[]> {
     .map((u) => u.fid);
 }
 
-export async function getNewActivity() {
+export async function getNewActivity(): Promise<NotificationEventPayload[]>  {
   try {
     const result = await db
       .select()
@@ -62,15 +62,19 @@ export async function getNewActivity() {
       .where(isNull(notifications.send_at))
       .orderBy(notifications.created_at);
 
-    const parsedActivity = result.map((row) => 
-      NotificationRowSchema.parse({
+    const parsedActivity = result.map((row) => {
+      const parsed = NotificationRowSchema.parse({
         ...row,
         data: {
           event: row.event,
           data: row.data,
         },
-      })
-    );
+      });
+      return {
+        event: parsed.event,
+        data: parsed.data.data,
+      } as NotificationEventPayload;
+    });
     return parsedActivity;
   } catch (error) {
     console.error('Error querying activity:', error);
