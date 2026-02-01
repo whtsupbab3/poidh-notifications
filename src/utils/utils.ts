@@ -1,7 +1,7 @@
 import { db } from '../db';
 import { notifications } from '../db-schema';
 import { isNull } from 'drizzle-orm';
-import { NotificationRowSchema, FarcasterUser, NotificationEventPayload } from './types';
+import { FarcasterUser, NotificationEventPayload, NotificationEventPayloadSchema } from './types';
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY;
 
@@ -63,17 +63,12 @@ export async function getNewActivity(): Promise<NotificationEventPayload[]>  {
       .orderBy(notifications.created_at);
 
     const parsedActivity = result.map((row) => {
-      const parsed = NotificationRowSchema.parse({
-        ...row,
-        data: {
-          event: row.event,
-          data: row.data,
-        },
-      });
-      return {
-        event: parsed.event,
-        data: parsed.data.data,
-      } as NotificationEventPayload;
+      const payload = {
+        id: row.id,
+        event: row.event,
+        data: row.data,
+      };
+      return NotificationEventPayloadSchema.parse(payload) as NotificationEventPayload;
     });
     return parsedActivity;
   } catch (error) {
