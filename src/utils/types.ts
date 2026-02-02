@@ -29,25 +29,6 @@ const AddressSchema = z.custom<Address>(
   }
 );
 
-export type BountyBaseData = {
-  id: number;
-  chainId: number;
-  onChainId: number;
-  amountUSD: number;
-  amountCrypto: string;
-  title: string;
-  description: string;
-  issuer: Address;
-  createdAt: number;
-  inProgress: boolean;
-  isJoinedBounty: boolean;
-  isCanceled: boolean;
-  isMultiplayer: boolean;
-  isVoting: boolean;
-  deadline?: number | null;
-  currency: string;
-};
-
 const BountyBaseDataSchema = z.object({
   id: z.number(),
   chainId: z.union([z.literal(666666666), z.literal(42161), z.literal(8453)]),
@@ -67,13 +48,13 @@ const BountyBaseDataSchema = z.object({
   currency: z.string(),
 });
 
-export type BountyWithParticipantsData = BountyBaseData & {
-  participants: Address[];
-};
+export type BountyBaseData = z.infer<typeof BountyBaseDataSchema>;
 
 const BountyWithParticipantsDataSchema = BountyBaseDataSchema.extend({
   participants: z.array(AddressSchema),
 });
+
+export type BountyWithParticipantsData = z.infer<typeof BountyWithParticipantsDataSchema>;
 
 export type WithdrawalAmountsData = {
   withdrawalAmountDegen: number | null;
@@ -86,20 +67,6 @@ export type WithdrawIssuerData = {
   amountCrypto: string;
   amountUSD: number;
   withdrawalAmounts: WithdrawalAmountsData;
-};
-
-export type ClaimEventData = {
-  id: number;
-  chainId: number;
-  onChainId: number;
-  bountyId: number;
-  title: string;
-  description: string;
-  url: string;
-  issuer: Address;
-  owner: Address;
-  isVoting: boolean;
-  isAccepted: boolean;
 };
 
 const ClaimEventDataSchema = z.object({
@@ -116,18 +83,11 @@ const ClaimEventDataSchema = z.object({
   isAccepted: z.boolean(),
 });
 
-export type BountyCreatedEventData = BountyBaseData;
+export type ClaimEventData = z.infer<typeof ClaimEventDataSchema>;
 
 const BountyCreatedEventDataSchema = BountyBaseDataSchema;
 
-export type BountyJoinedEventData = {
-  participant: {
-    address: Address;
-    amountCrypto: string;
-    amountUSD: number;
-  };
-  bounty: BountyWithParticipantsData;
-};
+export type BountyCreatedEventData = z.infer<typeof BountyCreatedEventDataSchema>;
 
 const BountyJoinedEventDataSchema = z.object({
   participant: z.object({
@@ -138,51 +98,29 @@ const BountyJoinedEventDataSchema = z.object({
   bounty: BountyWithParticipantsDataSchema,
 });
 
-export type ClaimCreatedEventData = {
-  bounty: BountyWithParticipantsData;
-  claim: ClaimEventData;
-};
+export type BountyJoinedEventData = z.infer<typeof BountyJoinedEventDataSchema>;
 
 const ClaimCreatedEventDataSchema = z.object({
   bounty: BountyWithParticipantsDataSchema,
   claim: ClaimEventDataSchema,
 });
 
-export type ClaimAcceptedEventData = {
-  bounty: BountyWithParticipantsData;
-  claim: ClaimEventData;
-};
+export type ClaimCreatedEventData = z.infer<typeof ClaimCreatedEventDataSchema>;
 
 const ClaimAcceptedEventDataSchema = z.object({
   bounty: BountyWithParticipantsDataSchema,
   claim: ClaimEventDataSchema,
 });
 
-export type WithdrawFromOpenBountyEventData = {
-  issuer: WithdrawIssuerData;
-  bounty: BountyWithParticipantsData;
-};
-
-export type WithdrawalEventData = {
-  issuer: WithdrawIssuerData;
-};
-
-export type WithdrawalToEventData = {
-  to: Address;
-  issuer: WithdrawIssuerData;
-};
-
-export type VotingStartedEventData = {
-  bounty: BountyWithParticipantsData;
-  claim: ClaimEventData;
-  otherClaimers: Address[];
-};
+export type ClaimAcceptedEventData = z.infer<typeof ClaimAcceptedEventDataSchema>;
 
 const VotingStartedEventDataSchema = z.object({
   bounty: BountyWithParticipantsDataSchema,
   claim: ClaimEventDataSchema,
   otherClaimers: z.array(AddressSchema),
 });
+
+export type VotingStartedEventData = z.infer<typeof VotingStartedEventDataSchema>;
 
 const WithdrawFromOpenBountyEventDataSchema = z.object({
   issuer: z.object({
@@ -224,6 +162,10 @@ const WithdrawalToEventDataSchema = z.object({
     }),
   }),
 });
+
+export type WithdrawFromOpenBountyEventData = z.infer<typeof WithdrawFromOpenBountyEventDataSchema>;
+export type WithdrawalEventData = z.infer<typeof WithdrawalEventDataSchema>;
+export type WithdrawalToEventData = z.infer<typeof WithdrawalToEventDataSchema>;
 
 export type NotificationEventPayload =
   | {

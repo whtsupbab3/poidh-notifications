@@ -1,4 +1,4 @@
-import { db } from '../db';
+import { getDb } from '../db';
 import { notifications } from '../db-schema';
 import { isNull } from 'drizzle-orm';
 import { FarcasterUser, NotificationEventPayload, NotificationEventPayloadSchema } from './types';
@@ -56,6 +56,7 @@ export async function getFarcasterFids(addresses: string[]): Promise<number[]> {
 
 export async function getNewActivity(): Promise<NotificationEventPayload[]>  {
   try {
+    const db = getDb();
     const result = await db
       .select()
       .from(notifications)
