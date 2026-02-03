@@ -1,6 +1,6 @@
 import { getDb } from '../db';
 import { notifications } from '../db-schema';
-import { isNull } from 'drizzle-orm';
+import { isNull, gt, and } from 'drizzle-orm';
 import { FarcasterUser, NotificationEventPayload, NotificationEventPayloadSchema } from './types';
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY;
@@ -54,13 +54,19 @@ export async function getFarcasterFids(addresses: string[]): Promise<number[]> {
     .map((u) => u.fid);
 }
 
-export async function getNewActivity(): Promise<NotificationEventPayload[]>  {
+export async function getRecentActivity(): Promise<NotificationEventPayload[]>  {
   try {
     const db = getDb();
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
     const result = await db
       .select()
       .from(notifications)
-      .where(isNull(notifications.send_at))
+      .where(
+        and(
+          gt(notifications.created_at, fiveMinutesAgo),
+          isNull(notifications.send_at)
+        )
+      )
       .orderBy(notifications.created_at);
 
     const parsedActivity = result.map((row) => {

@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
-import { getNewActivity } from './utils/utils';
+import { getRecentActivity } from './utils/utils';
 import { processBountyCreated, processBountyJoined, processClaimAccepted, processClaimCreated, processVotingStarted } from './utils/notifications';
 import { getDb } from './db';
 import { notifications } from './db-schema';
@@ -11,7 +11,7 @@ const app = new Hono();
 let lastProcessedIndex = -1;
 
 setInterval(async () => {
-  const newActivities = await getNewActivity();
+  const newActivities = await getRecentActivity();
   const db = getDb();
 
   for (const act of newActivities) {

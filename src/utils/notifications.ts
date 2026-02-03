@@ -37,12 +37,14 @@ async function sendNotification({
   let i = 3;
   while (i-- !== 0) {
     try {
-      await (await fetch(url, options)).json();
-      break;
+      const response = await (await fetch(url, options)).json();
+      return response;
     } catch (error) {
       console.error(error);
     }
   }
+
+  return null;
 }
 
 export async function processBountyCreated(
