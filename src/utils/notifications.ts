@@ -147,10 +147,7 @@ function getCommentTargetAddresses(
     | Extract<NotificationEventPayload, { event: 'ReplyCreated' }>
 ) {
   const rawAddresses = activity.data.addresses ?? [];
-  const issuer = activity.data.issuer.toLowerCase();
-  return rawAddresses
-    .filter((address) => address.toLowerCase() !== issuer)
-    .map((address) => address.toLocaleLowerCase());
+  return rawAddresses.map((address) => address.toLocaleLowerCase());
 }
 
 export async function processCommentCreated(
