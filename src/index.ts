@@ -2,7 +2,15 @@ import 'dotenv/config';
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
 import { getRecentActivity } from './utils/utils';
-import { processBountyCreated, processBountyJoined, processClaimAccepted, processClaimCreated, processVotingStarted } from './utils/notifications';
+import {
+  processBountyCreated,
+  processBountyJoined,
+  processClaimAccepted,
+  processClaimCreated,
+  processCommentCreated,
+  processReplyCreated,
+  processVotingStarted,
+} from './utils/notifications';
 import { getDb } from './db';
 import { notifications } from './db-schema';
 import { eq } from 'drizzle-orm';
@@ -25,6 +33,10 @@ setInterval(async () => {
       await processClaimAccepted(act);
     } else if (act.event === 'VotingStarted') {
       await processVotingStarted(act);
+    } else if (act.event === 'CommentCreated') {
+      await processCommentCreated(act);
+    } else if (act.event === 'ReplyCreated') {
+      await processReplyCreated(act);
     }
 
     await db.update(notifications).set({ send_at: new Date() }).where(eq(notifications.id, act.id));

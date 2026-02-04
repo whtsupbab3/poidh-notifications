@@ -22,12 +22,9 @@ export type Chain = {
   slug: Netname;
 };
 
-const AddressSchema = z.custom<Address>(
-  (val: string) => /^0x[0-9a-fA-F]*$/.test(val),
-  {
-    message: 'Invalid Ethereum address',
-  }
-);
+const AddressSchema = z.custom<Address>((val: string) => /^0x[0-9a-fA-F]*$/.test(val), {
+  message: 'Invalid Ethereum address',
+});
 
 const BountyBaseDataSchema = z.object({
   id: z.number(),
@@ -163,9 +160,20 @@ const WithdrawalToEventDataSchema = z.object({
   }),
 });
 
+const CommentCreatedEventDataSchema = z.object({
+  addresses: z.array(AddressSchema).optional(),
+  link: z.string(),
+  message: z.string(),
+  issuer: AddressSchema,
+});
+
+const ReplyCreatedEventDataSchema = CommentCreatedEventDataSchema;
+
 export type WithdrawFromOpenBountyEventData = z.infer<typeof WithdrawFromOpenBountyEventDataSchema>;
 export type WithdrawalEventData = z.infer<typeof WithdrawalEventDataSchema>;
 export type WithdrawalToEventData = z.infer<typeof WithdrawalToEventDataSchema>;
+export type CommentCreatedEventData = z.infer<typeof CommentCreatedEventDataSchema>;
+export type ReplyCreatedEventData = z.infer<typeof ReplyCreatedEventDataSchema>;
 
 export type NotificationEventPayload =
   | {
@@ -207,6 +215,16 @@ export type NotificationEventPayload =
       id: number;
       event: 'VotingStarted';
       data: VotingStartedEventData;
+    }
+  | {
+      id: number;
+      event: 'CommentCreated';
+      data: CommentCreatedEventData;
+    }
+  | {
+      id: number;
+      event: 'ReplyCreated';
+      data: ReplyCreatedEventData;
     };
 
 export const NotificationEventPayloadSchema = z.discriminatedUnion('event', [
@@ -249,5 +267,15 @@ export const NotificationEventPayloadSchema = z.discriminatedUnion('event', [
     id: z.number(),
     event: z.literal('VotingStarted'),
     data: VotingStartedEventDataSchema,
+  }),
+  z.object({
+    id: z.number(),
+    event: z.literal('CommentCreated'),
+    data: CommentCreatedEventDataSchema,
+  }),
+  z.object({
+    id: z.number(),
+    event: z.literal('ReplyCreated'),
+    data: ReplyCreatedEventDataSchema,
   }),
 ]);
