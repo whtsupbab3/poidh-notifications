@@ -147,14 +147,20 @@ export async function processBountyJoined(
   const bounty = activity.data.bounty;
   const chain = getChainById({ chainId: activity.data.bounty.chainId as ChainId });
 
+  console.log('Send a notification when a bounty reached a price of $100 or more');
+  console.log('bounty.amountUSD', bounty.amountUSD);
+  console.log('activity.data.participant.amountUSD', activity.data.participant.amountUSD);
   // Send a notification when a bounty reached a price of $100 or more
   if (bounty.amountUSD >= 100 && bounty.amountUSD - activity.data.participant.amountUSD < 100) {
+    console.log('Building the notification message.')
     const creatorName = await getDisplayName(bounty.issuer);
-    await sendNotification({
+    console.log('creatorName', creatorName)
+    const response = await sendNotification({
       title: `💰 NEW $${bounty.amountUSD} BOUNTY 💰`,
       messageBody: `${bounty.title}${creatorName ? ` from ${creatorName}` : ''}`,
       targetUrl: `${POIDH_BASE_URL}/${chain.slug}/bounty/${bounty.id}`,
     });
+    console.log('response', response);
   }
 
   // Send a notification to bounty participants when someone contributed to bounty
