@@ -141,6 +141,52 @@ export async function processClaimAccepted(
   }
 }
 
+function getCommentTargetAddresses(
+  activity:
+    | Extract<NotificationEventPayload, { event: 'CommentCreated' }>
+    | Extract<NotificationEventPayload, { event: 'ReplyCreated' }>
+) {
+  const rawAddresses = activity.data.addresses ?? [];
+  const issuer = activity.data.issuer.toLowerCase();
+  return rawAddresses
+    .filter((address) => address.toLowerCase() !== issuer)
+    .map((address) => address.toLocaleLowerCase());
+}
+
+export async function processCommentCreated(
+  activity: Extract<NotificationEventPayload, { event: 'CommentCreated' }>
+) {
+  const targetAddresses = getCommentTargetAddresses(activity);
+  const targetFIds = await getFarcasterFids(targetAddresses);
+
+  if (targetFIds.length > 0) {
+    const commenterName = await getDisplayName(activity.data.issuer);
+    await sendNotification({
+      title: 'new comment on poidh 💬',
+      messageBody: `${commenterName} commented: ${activity.data.message}`,
+      targetUrl: activity.data.link,
+      targetFIds,
+    });
+  }
+}
+
+export async function processReplyCreated(
+  activity: Extract<NotificationEventPayload, { event: 'ReplyCreated' }>
+) {
+  const targetAddresses = getCommentTargetAddresses(activity);
+  const targetFIds = await getFarcasterFids(targetAddresses);
+
+  if (targetFIds.length > 0) {
+    const replierName = await getDisplayName(activity.data.issuer);
+    await sendNotification({
+      title: 'new reply on poidh 💬',
+      messageBody: `${replierName} replied: ${activity.data.message}`,
+      targetUrl: activity.data.link,
+      targetFIds,
+    });
+  }
+}
+
 export async function processBountyJoined(
   activity: Extract<NotificationEventPayload, { event: 'BountyJoined' }>
 ) {
@@ -152,9 +198,9 @@ export async function processBountyJoined(
   console.log('activity.data.participant.amountUSD', activity.data.participant.amountUSD);
   // Send a notification when a bounty reached a price of $100 or more
   if (bounty.amountUSD >= 100 && bounty.amountUSD - activity.data.participant.amountUSD < 100) {
-    console.log('Building the notification message.')
+    console.log('Building the notification message.');
     const creatorName = await getDisplayName(bounty.issuer);
-    console.log('creatorName', creatorName)
+    console.log('creatorName', creatorName);
     const response = await sendNotification({
       title: `💰 NEW $${bounty.amountUSD} BOUNTY 💰`,
       messageBody: `${bounty.title}${creatorName ? ` from ${creatorName}` : ''}`,
