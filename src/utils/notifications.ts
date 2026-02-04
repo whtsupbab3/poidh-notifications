@@ -147,6 +147,16 @@ export async function processBountyJoined(
   const bounty = activity.data.bounty;
   const chain = getChainById({ chainId: activity.data.bounty.chainId as ChainId });
 
+  // Send a notification when a bounty reached a price of $100 or more
+  if (bounty.amountUSD >= 100 && bounty.amountUSD - activity.data.participant.amountUSD < 100) {
+    const creatorName = await getDisplayName(bounty.issuer);
+    await sendNotification({
+      title: `💰 NEW $${bounty.amountUSD} BOUNTY 💰`,
+      messageBody: `${bounty.title}${creatorName ? ` from ${creatorName}` : ''}`,
+      targetUrl: `${POIDH_BASE_URL}/${chain.slug}/bounty/${bounty.id}`,
+    });
+  }
+
   // Send a notification to bounty participants when someone contributed to bounty
   const bountyParticipantsTargetFids = await getFarcasterFids(bounty.participants);
   if (bountyParticipantsTargetFids.length > 0) {
@@ -158,16 +168,6 @@ export async function processBountyJoined(
       )} ${chain.currency.toUpperCase()} from ${contributorDisplayName}`,
       targetUrl: `${POIDH_BASE_URL}/${chain.slug}/bounty/${bounty.id}`,
       targetFIds: bountyParticipantsTargetFids,
-    });
-  }
-
-  // Send a notification when a bounty reached a price of $100 or more
-  if (bounty.amountUSD >= 100 && bounty.amountUSD - activity.data.participant.amountUSD < 100) {
-    const creatorName = await getDisplayName(bounty.issuer);
-    await sendNotification({
-      title: `💰 NEW $${bounty.amountCrypto} BOUNTY 💰`,
-      messageBody: `${bounty.title}${creatorName ? ` from ${creatorName}` : ''}`,
-      targetUrl: `${POIDH_BASE_URL}/${chain.slug}/bounty/${bounty.id}`,
     });
   }
 }
