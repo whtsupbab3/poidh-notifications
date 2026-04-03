@@ -9,6 +9,7 @@ import {
   processClaimCreated,
   processCommentCreated,
   processReplyCreated,
+  processVotingResolved,
   processVotingStarted,
 } from './utils/notifications';
 import { getDb } from './db';
@@ -37,6 +38,8 @@ setInterval(async () => {
       await processCommentCreated(act);
     } else if (act.event === 'ReplyCreated') {
       await processReplyCreated(act);
+    } else if (act.event === 'VotingResolved') {
+      await processVotingResolved(act);
     }
 
     await db.update(notifications).set({ send_at: new Date() }).where(eq(notifications.id, act.id));

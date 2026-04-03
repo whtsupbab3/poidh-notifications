@@ -74,3 +74,12 @@ export async function getRecentActivity(): Promise<NotificationEventPayload[]> {
     return [];
   }
 }
+
+export function getCommentTargetAddresses(
+  activity:
+    | Extract<NotificationEventPayload, { event: 'CommentCreated' }>
+    | Extract<NotificationEventPayload, { event: 'ReplyCreated' }>
+) {
+  const rawAddresses = activity.data.addresses ?? [];
+  return rawAddresses.map((address) => address.toLocaleLowerCase());
+}

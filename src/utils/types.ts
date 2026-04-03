@@ -119,6 +119,19 @@ const VotingStartedEventDataSchema = z.object({
 
 export type VotingStartedEventData = z.infer<typeof VotingStartedEventDataSchema>;
 
+const VotingResolvedEventDataSchema = z.object({
+  bounty: BountyWithParticipantsDataSchema,
+  claim: ClaimEventDataSchema,
+  voting: z.object({
+    passed: z.boolean(),
+    yes: z.string(),
+    no: z.string(),
+    round: z.string(),
+  }),
+});
+
+export type VotingResolvedEventData = z.infer<typeof VotingResolvedEventDataSchema>;
+
 const WithdrawFromOpenBountyEventDataSchema = z.object({
   issuer: z.object({
     address: AddressSchema,
@@ -218,6 +231,11 @@ export type NotificationEventPayload =
     }
   | {
       id: number;
+      event: 'VotingResolved';
+      data: VotingResolvedEventData;
+    }
+  | {
+      id: number;
       event: 'CommentCreated';
       data: CommentCreatedEventData;
     }
@@ -267,6 +285,11 @@ export const NotificationEventPayloadSchema = z.discriminatedUnion('event', [
     id: z.number(),
     event: z.literal('VotingStarted'),
     data: VotingStartedEventDataSchema,
+  }),
+  z.object({
+    id: z.number(),
+    event: z.literal('VotingResolved'),
+    data: VotingResolvedEventDataSchema,
   }),
   z.object({
     id: z.number(),

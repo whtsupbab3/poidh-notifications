@@ -1,6 +1,6 @@
 import { getChainById, POIDH_BASE_URL } from './config';
 import { ChainId, NotificationEventPayload } from './types';
-import { getDisplayName, getFarcasterFids } from './utils';
+import { getCommentTargetAddresses, getDisplayName, getFarcasterFids } from './utils';
 import { formatEther } from 'viem';
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY;
@@ -102,7 +102,6 @@ export async function processVotingStarted(
 
   // Send a notification when claim is nominated to bounty participants
   if (bountyParticipantsTargetFids.length > 0) {
-    const bountyIssuerDisplayName = await getDisplayName(activity.data.bounty.issuer);
     await sendNotification({
       title: `your vote is needed 🗳️`,
       messageBody: `${bountyIssuerDisplayName} has proposed a winner for ${activity.data.bounty.title} - you have 48 hours to vote`,
@@ -139,15 +138,6 @@ export async function processClaimAccepted(
       targetFIds,
     });
   }
-}
-
-function getCommentTargetAddresses(
-  activity:
-    | Extract<NotificationEventPayload, { event: 'CommentCreated' }>
-    | Extract<NotificationEventPayload, { event: 'ReplyCreated' }>
-) {
-  const rawAddresses = activity.data.addresses ?? [];
-  return rawAddresses.map((address) => address.toLocaleLowerCase());
 }
 
 export async function processCommentCreated(
@@ -190,14 +180,9 @@ export async function processBountyJoined(
   const bounty = activity.data.bounty;
   const chain = getChainById({ chainId: activity.data.bounty.chainId as ChainId });
 
-  console.log('Send a notification when a bounty reached a price of $100 or more');
-  console.log('bounty.amountUSD', bounty.amountUSD);
-  console.log('activity.data.participant.amountUSD', activity.data.participant.amountUSD);
   // Send a notification when a bounty reached a price of $100 or more
   if (bounty.amountUSD >= 100 && bounty.amountUSD - activity.data.participant.amountUSD < 100) {
-    console.log('Building the notification message.');
     const creatorName = await getDisplayName(bounty.issuer);
-    console.log('creatorName', creatorName);
     const response = await sendNotification({
       title: `💰 NEW $${bounty.amountUSD} BOUNTY 💰`,
       messageBody: `${bounty.title}${creatorName ? ` from ${creatorName}` : ''}`,
@@ -218,5 +203,32 @@ export async function processBountyJoined(
       targetUrl: `${POIDH_BASE_URL}/${chain.slug}/bounty/${bounty.id}`,
       targetFIds: bountyParticipantsTargetFids,
     });
+  }
+}
+
+export async function processVotingResolved(
+  activity: Extract<NotificationEventPayload, { event: 'VotingResolved' }>
+) {
+  const bounty = activity.data.bounty;
+  const chain = getChainById({ chainId: activity.data.bounty.chainId as ChainId });
+  const claimCreatorTargetFid = await getFarcasterFids([activity.data.claim.issuer]);
+
+  if (claimCreatorTargetFid.length > 0) {
+    if (activity.data.voting.passed) {
+      const bountyIssuerDisplayName = await getDisplayName(bounty.issuer);
+      await sendNotification({
+          title: 'you won a bounty! 🏆',
+          messageBody: `you're the winner of ${bounty.title} from ${bountyIssuerDisplayName} - claim funds via your in-app profile page"`,
+          targetUrl: `${POIDH_BASE_URL}/${chain.slug}/bounty/${bounty.id}`,
+          targetFIds: claimCreatorTargetFid,
+        });
+    } else {
+      await sendNotification({
+          title: 'your claim was vetoed',
+          messageBody: 'please contact the bounty creator for next steps',
+          targetUrl: `${POIDH_BASE_URL}/${chain.slug}/bounty/${bounty.id}`,
+          targetFIds: claimCreatorTargetFid,
+        });
+    }
   }
 }
