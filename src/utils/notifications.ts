@@ -133,7 +133,7 @@ export async function processClaimAccepted(
     const creatorName = await getDisplayName(activity.data.bounty.issuer);
     await sendNotification({
       title: 'you won a bounty! 🏆',
-      messageBody: `you're the winner of ${activity.data.bounty.title} from ${creatorName} - claim funds via your in-app profile page"`,
+      messageBody: `you're the winner of ${activity.data.bounty.title} from ${creatorName} - claim funds via your in-app profile page`,
       targetUrl: `${POIDH_BASE_URL}/${chain.slug}/bounty/${activity.data.bounty.id}`,
       targetFIds,
     });
@@ -218,7 +218,7 @@ export async function processVotingResolved(
       const bountyIssuerDisplayName = await getDisplayName(bounty.issuer);
       await sendNotification({
           title: 'you won a bounty! 🏆',
-          messageBody: `you're the winner of ${bounty.title} from ${bountyIssuerDisplayName} - claim funds via your in-app profile page"`,
+          messageBody: `you're the winner of ${bounty.title} from ${bountyIssuerDisplayName} - claim funds via your in-app profile page`,
           targetUrl: `${POIDH_BASE_URL}/${chain.slug}/bounty/${bounty.id}`,
           targetFIds: claimCreatorTargetFid,
         });
