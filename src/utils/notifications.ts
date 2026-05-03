@@ -184,7 +184,7 @@ export async function processBountyJoined(
   if (bounty.amountUSD >= 100 && bounty.amountUSD - activity.data.participant.amountUSD < 100) {
     const creatorName = await getDisplayName(bounty.issuer);
     const response = await sendNotification({
-      title: `💰 NEW $${bounty.amountUSD} BOUNTY 💰`,
+      title: `💰 NEW $${bounty.amountUSD.toFixed(0)} BOUNTY 💰`,
       messageBody: `${bounty.title}${creatorName ? ` from ${creatorName}` : ''}`,
       targetUrl: `${POIDH_BASE_URL}/${chain.slug}/bounty/${bounty.id}`,
     });
