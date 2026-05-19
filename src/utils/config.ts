@@ -20,6 +20,12 @@ export const chains: Record<Netname, Chain> = {
     slug: 'base',
     currency: 'eth',
   },
+  mainnet: {
+    id: 1,
+    name: 'Ethereum',
+    slug: 'mainnet',
+    currency: 'eth',
+  },
 };
 
 export function getChainById({ chainId }: { chainId: ChainId }) {

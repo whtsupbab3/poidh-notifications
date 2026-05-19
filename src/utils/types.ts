@@ -11,9 +11,9 @@ export type Address = `0x${string}`;
 
 export type Currency = 'eth' | 'degen';
 
-export type Netname = 'degen' | 'base' | 'arbitrum';
+export type Netname = 'degen' | 'base' | 'arbitrum' | 'mainnet';
 
-export type ChainId = 666666666 | 42161 | 8453;
+export type ChainId = 666666666 | 42161 | 8453 | 1;
 
 export type Chain = {
   id: number;
@@ -28,7 +28,7 @@ const AddressSchema = z.custom<Address>((val: string) => /^0x[0-9a-fA-F]*$/.test
 
 const BountyBaseDataSchema = z.object({
   id: z.number(),
-  chainId: z.union([z.literal(666666666), z.literal(42161), z.literal(8453)]),
+  chainId: z.union([z.literal(666666666), z.literal(42161), z.literal(8453), z.literal(1)]),
   onChainId: z.number(),
   title: z.string(),
   description: z.string(),
@@ -57,7 +57,15 @@ export type WithdrawalAmountsData = {
   withdrawalAmountDegen: number | null;
   withdrawalAmountBase: number | null;
   withdrawalAmountArbitrum: number | null;
+  withdrawalAmountMainnet: number | null;
 };
+
+const WithdrawalAmountsSchema = z.object({
+  withdrawalAmountDegen: z.number().nullable(),
+  withdrawalAmountBase: z.number().nullable(),
+  withdrawalAmountArbitrum: z.number().nullable(),
+  withdrawalAmountMainnet: z.number().nullable(),
+});
 
 export type WithdrawIssuerData = {
   address: Address;
@@ -68,7 +76,7 @@ export type WithdrawIssuerData = {
 
 const ClaimEventDataSchema = z.object({
   id: z.number(),
-  chainId: z.union([z.literal(666666666), z.literal(42161), z.literal(8453)]),
+  chainId: z.union([z.literal(666666666), z.literal(42161), z.literal(8453), z.literal(1)]),
   onChainId: z.number(),
   bountyId: z.number(),
   title: z.string(),
@@ -137,11 +145,7 @@ const WithdrawFromOpenBountyEventDataSchema = z.object({
     address: AddressSchema,
     amountCrypto: z.string(),
     amountUSD: z.number(),
-    withdrawalAmounts: z.object({
-      withdrawalAmountDegen: z.number().nullable(),
-      withdrawalAmountBase: z.number().nullable(),
-      withdrawalAmountArbitrum: z.number().nullable(),
-    }),
+    withdrawalAmounts: WithdrawalAmountsSchema,
   }),
   bounty: BountyWithParticipantsDataSchema,
 });
@@ -151,11 +155,7 @@ const WithdrawalEventDataSchema = z.object({
     address: AddressSchema,
     amountCrypto: z.string(),
     amountUSD: z.number(),
-    withdrawalAmounts: z.object({
-      withdrawalAmountDegen: z.number().nullable(),
-      withdrawalAmountBase: z.number().nullable(),
-      withdrawalAmountArbitrum: z.number().nullable(),
-    }),
+    withdrawalAmounts: WithdrawalAmountsSchema,
   }),
 });
 
@@ -165,11 +165,7 @@ const WithdrawalToEventDataSchema = z.object({
     address: AddressSchema,
     amountCrypto: z.string(),
     amountUSD: z.number(),
-    withdrawalAmounts: z.object({
-      withdrawalAmountDegen: z.number().nullable(),
-      withdrawalAmountBase: z.number().nullable(),
-      withdrawalAmountArbitrum: z.number().nullable(),
-    }),
+    withdrawalAmounts: WithdrawalAmountsSchema,
   }),
 });
 
